@@ -1,6 +1,6 @@
 [System.Serializable]
 public class GameModel
 {
-    public float enemySpawnRate;
-    public int maxEnemies;
+    public float enemySpawnRate = 3f;
+    public int maxEnemies = 10;
 }

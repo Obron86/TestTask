@@ -2,22 +2,23 @@ using UnityEngine;
 
 public class GameController : MonoBehaviour
 {
-    [SerializeField] private GameModel gameModel;
-    [SerializeField] private PlayerController playerController;
-    [SerializeField] private EnemySpawner enemySpawner;
+    private GameModel gameModel;
+    private PlayerController playerController;
+    private EnemySpawner enemySpawner;
 
     public GameModel GameModel
     {
-        get { return gameModel; }
+        get => gameModel;
     }
 
-    void Start()
+    public PlayerController PlayerController
     {
-        // Initialize game state
+        get { return playerController; }
     }
 
-    void Update()
+    public void Initialize(PlayerController playerController)
     {
-        // Update game state
+        this.playerController = playerController;
+        gameModel = new GameModel();
     }
 }
