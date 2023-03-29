@@ -1,6 +1,9 @@
 using System;
 
-public static  class GlobalGameEvents
+namespace Core
 {
-    public static Action GameOver;
+    public static  class GlobalGameEvents
+    {
+        public static Action GameOver;
+    }
 }

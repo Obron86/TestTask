@@ -1,7 +1,8 @@
-using System;
-
-[Serializable]
-public class EnemyModel
+namespace Enemy
 {
-    public float speed = 3f;
+    [System.Serializable]
+    public class EnemyModel
+    {
+        public float speed;
+    }
 }

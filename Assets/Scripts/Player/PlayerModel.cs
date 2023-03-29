@@ -1,7 +1,8 @@
-using UnityEngine;
-
-[System.Serializable]
-public class PlayerModel
+namespace Player
 {
-    public float speed = 10;
+    [System.Serializable]
+    public class PlayerModel
+    {
+        public float speed = 10;
+    }
 }
