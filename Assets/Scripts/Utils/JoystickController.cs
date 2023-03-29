@@ -4,12 +4,12 @@ using UnityEngine.EventSystems;
 public class JoystickController : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDragHandler
 {
     [SerializeField] private GameObject joystick;
-    private TouchJoystick touchJoystick;
+    private TouchJoystick _touchJoystick;
 
     private void Start()
     {
         joystick.SetActive(false);
-        touchJoystick = joystick.GetComponent<TouchJoystick>();
+        _touchJoystick = joystick.GetComponent<TouchJoystick>();
     }
 
     public void OnPointerDown(PointerEventData eventData)
@@ -20,17 +20,16 @@ public class JoystickController : MonoBehaviour, IPointerDownHandler, IPointerUp
 
         joystick.transform.localPosition = localPosition;
         joystick.SetActive(true);
-        touchJoystick.OnPointerDown(eventData);
     }
 
     public void OnPointerUp(PointerEventData eventData)
     {
-        touchJoystick.OnPointerUp(eventData);
+        _touchJoystick.OnPointerUp(eventData);
         joystick.SetActive(false);
     }
 
     public void OnDrag(PointerEventData eventData)
     {
-        touchJoystick.OnDrag(eventData);
+        _touchJoystick.OnDrag(eventData);
     }
 }

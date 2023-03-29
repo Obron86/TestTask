@@ -2,57 +2,73 @@ using UnityEngine;
 
 public class EnemySpawner : MonoBehaviour
 {
-    private GameObject enemyPrefab;
-    private GameObject plane;
-    private PlayerController player;
-    private GameController gameController;
-    private float spawnTimer;
-    private float minX, maxX, minZ, maxZ;
-
-    
+    private GameObject _enemyPrefab;
+    private GameObject _plane;
+    private PlayerController _player;
+    private GameController _gameController;
+    private float _spawnTimer;
+    private float _minX, _maxX, _minZ, _maxZ;
+    private bool _isGameOver;
+    private int _spawnedEnemiesCounter;
     
     public void Initialize(GameController gameController, GameObject plane, GameObject enemyPrefab, PlayerController player)
     {
-        this.gameController = gameController;
-        this.plane = plane;
-        this.enemyPrefab = enemyPrefab;
-        this.player = player;
+        _gameController = gameController;
+        _plane = plane;
+        _enemyPrefab = enemyPrefab;
+        _player = player;
 
-        // Calculate plane boundaries
-        float planeHalfWidth = plane.transform.localScale.x * 5.0f;
-        float planeHalfLength = plane.transform.localScale.z * 5.0f;
+        var localScale = plane.transform.localScale;
+        var planeHalfWidth = localScale.x * 5.0f;
+        var planeHalfLength = localScale.z * 5.0f;
 
-        minX = plane.transform.position.x - planeHalfWidth;
-        maxX = plane.transform.position.x + planeHalfWidth;
-        minZ = plane.transform.position.z - planeHalfLength;
-        maxZ = plane.transform.position.z + planeHalfLength;
+        (var minX, var maxX, var minZ, var maxZ) = PlaneUtilities.CalculatePlaneBoundaries(plane);
+        _minX = minX;
+        _maxX = maxX;
+        _minZ = minZ;
+        _maxZ = maxZ;
+        
+        GlobalGameEvents.GameOver += OnGameOver;
     }
     
-    public void SetEnemyPrefab(GameObject enemyPrefab)
+    private void OnGameOver()
     {
-        this.enemyPrefab = enemyPrefab;
+        _isGameOver = true;
+        GlobalGameEvents.GameOver -= OnGameOver;
+    }
+    
+    public void SetEnemyPrefab(GameObject enemyPrefab) => _enemyPrefab = enemyPrefab;
+
+    private void Update()
+    {
+        if (_isGameOver) return;
+        _spawnTimer += Time.deltaTime;
+        
+        TrySpawn();
     }
 
-    void Update()
+    private void TrySpawn()
     {
-        spawnTimer += Time.deltaTime;
-        if (spawnTimer >= gameController.GameModel.enemySpawnRate)
+        if (_spawnTimer >= _gameController.GameModel.enemySpawnRate &&
+            _spawnedEnemiesCounter < _gameController.GameModel.maxEnemies)
         {
             SpawnEnemy();
-            spawnTimer = 0;
+            _spawnTimer = 0;
         }
     }
 
     private void SpawnEnemy()
     {
         Vector3 spawnPosition = new Vector3(
-            Random.Range(minX, maxX),
-            plane.transform.position.y,
-            Random.Range(minZ, maxZ)
+            Random.Range(_minX, _maxX),
+            _plane.transform.position.y,
+            Random.Range(_minZ, _maxZ)
         );
 
-        EnemyController enemyInstance = Instantiate(enemyPrefab, spawnPosition, Quaternion.identity).GetComponent<EnemyController>();
+        _spawnedEnemiesCounter++;
+        
+        EnemyController enemyInstance = Instantiate(_enemyPrefab, spawnPosition, Quaternion.identity).GetComponent<EnemyController>();
         enemyInstance.Initialize(new EnemyModel());
-        enemyInstance.SetPlayerController(player);
+        enemyInstance.SetPlayerController(_player);
     }
 }

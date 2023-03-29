@@ -2,24 +2,34 @@ using UnityEngine;
 
 public class EnemyController : MonoBehaviour
 {
-    private EnemyModel enemyModel;
-    private PlayerController playerController;
-    private Rigidbody enemyRigidbody;
+    private EnemyModel _enemyModel;
+    private PlayerController _playerController;
+    private Rigidbody _enemyRigidbody;
+
+    private bool _isGameOver;
 
     public void Initialize(EnemyModel enemyModel)
     {
-        this.enemyModel = enemyModel;
+        _enemyModel = enemyModel;
+        GlobalGameEvents.GameOver += OnGameOver;
     }
-    
+
     public void SetPlayerController(PlayerController playerController)
     {
-        this.playerController = playerController;
-        enemyRigidbody = GetComponent<Rigidbody>();
+        _playerController = playerController;
+        _enemyRigidbody = GetComponent<Rigidbody>();
+    }
+
+    private void OnGameOver()
+    {
+        _isGameOver = true;
+        GlobalGameEvents.GameOver -= OnGameOver;
     }
 
     void Update()
     {
-        Vector3 directionToPlayer = (playerController.transform.position - transform.position).normalized;
-        enemyRigidbody.velocity = directionToPlayer * enemyModel.speed;
+        if (_isGameOver) return;
+        Vector3 directionToPlayer = (_playerController.transform.position - transform.position).normalized;
+        _enemyRigidbody.velocity = directionToPlayer * _enemyModel.speed;
     }
 }

@@ -1,73 +1,99 @@
+using System;
 using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
-    private PlayerModel playerModel;
-    private GameObject plane;
-    private TouchJoystick touchJoystick;
-    private Rigidbody rigidBody;
-    private Vector3 moveDirection;
-    private float currentSpeed;
-    private float minX, maxX, minZ, maxZ;
-    private float playerHalfWidth, playerHalfLength;
+    private PlayerModel _playerModel;
+    private GameObject _plane;
+    private TouchJoystick _touchJoystick;
+    private Rigidbody _rigidBody;
+    private Vector3 _moveDirection;
+    private float _currentSpeed;
+    private float _minX, _maxX, _minZ, _maxZ;
+    private float _playerHalfWidth, _playerHalfLength;
 
-    public void Initialize(GameObject plane)
+    private bool _isGameOver;
+    
+    public event Action OnPlayerCollision;
+
+    public void Initialize(GameObject plane, TouchJoystick touchJoystick)
     {
-        playerModel = new PlayerModel();
-        this.plane = plane;
-        rigidBody = GetComponent<Rigidbody>();
-        touchJoystick = FindObjectOfType<TouchJoystick>();
+        _playerModel = new PlayerModel();
+        _touchJoystick = touchJoystick;
+        this._plane = plane;
+        _rigidBody = GetComponent<Rigidbody>();
 
         // Calculate plane boundaries
-        float planeHalfWidth = plane.transform.localScale.x * 5.0f;
-        float planeHalfLength = plane.transform.localScale.z * 5.0f;
+        var localScale = plane.transform.localScale;
+        float planeHalfWidth = localScale.x * 5.0f;
+        float planeHalfLength = localScale.z * 5.0f;
 
-        minX = this.plane.transform.position.x - planeHalfWidth;
-        maxX = this.plane.transform.position.x + planeHalfWidth;
-        minZ = this.plane.transform.position.z - planeHalfLength;
-        maxZ = this.plane.transform.position.z + planeHalfLength;
+        var position = _plane.transform.position;
+        _minX = position.x - planeHalfWidth;
+        _maxX = position.x + planeHalfWidth;
+        _minZ = position.z - planeHalfLength;
+        _maxZ = position.z + planeHalfLength;
 
         // Calculate player size
         Collider playerCollider = GetComponent<Collider>();
-        playerHalfWidth = playerCollider.bounds.size.x / 2;
-        playerHalfLength = playerCollider.bounds.size.z / 2;
+        var bounds = playerCollider.bounds;
+        _playerHalfWidth = bounds.size.x / 2;
+        _playerHalfLength = bounds.size.z / 2;
         
-        minX += playerHalfWidth;
-        maxX -= playerHalfWidth;
-        minZ += playerHalfLength;
-        maxZ -= playerHalfLength;
+        _minX += _playerHalfWidth;
+        _maxX -= _playerHalfWidth;
+        _minZ += _playerHalfLength;
+        _maxZ -= _playerHalfLength;
+
+        GlobalGameEvents.GameOver += OnGameOver;
     }
 
     void Update()
     {
-        Vector3 inputDirection = touchJoystick.GetInputDirection();
+        if (_isGameOver) return;
+        Vector3 inputDirection = _touchJoystick.GetInputDirection();
         float speedPercentage = inputDirection.magnitude;
-        currentSpeed = playerModel.speed * speedPercentage;
+        _currentSpeed = _playerModel.speed * speedPercentage;
 
-        moveDirection = inputDirection.normalized;
-        moveDirection.y = 0;
+        _moveDirection = inputDirection.normalized;
+        _moveDirection.y = 0;
     }
 
     void FixedUpdate()
     {
-        rigidBody.AddForce(moveDirection * currentSpeed, ForceMode.Acceleration);
+        if (_isGameOver) return;
+        _rigidBody.AddForce(_moveDirection * _currentSpeed, ForceMode.Acceleration);
 
         // Clamp the rigidbody's velocity to prevent slow movement beyond the edge
-        Vector3 clampedVelocity = rigidBody.velocity;
-        if (rigidBody.position.x <= minX && clampedVelocity.x < 0 || rigidBody.position.x >= maxX && clampedVelocity.x > 0)
+        Vector3 clampedVelocity = _rigidBody.velocity;
+        if (_rigidBody.position.x <= _minX && clampedVelocity.x < 0 || _rigidBody.position.x >= _maxX && clampedVelocity.x > 0)
         {
             clampedVelocity.x = 0;
         }
-        if (rigidBody.position.z <= minZ && clampedVelocity.z < 0 || rigidBody.position.z >= maxZ && clampedVelocity.z > 0)
+        if (_rigidBody.position.z <= _minZ && clampedVelocity.z < 0 || _rigidBody.position.z >= _maxZ && clampedVelocity.z > 0)
         {
             clampedVelocity.z = 0;
         }
-        rigidBody.velocity = clampedVelocity;
+        _rigidBody.velocity = clampedVelocity;
 
         // Clamp the rigidbody's position to stay within the plane boundaries
-        Vector3 newPosition = rigidBody.position;
-        newPosition.x = Mathf.Clamp(newPosition.x, minX, maxX);
-        newPosition.z = Mathf.Clamp(newPosition.z, minZ, maxZ);
-        rigidBody.position = newPosition;
+        Vector3 newPosition = _rigidBody.position;
+        newPosition.x = Mathf.Clamp(newPosition.x, _minX, _maxX);
+        newPosition.z = Mathf.Clamp(newPosition.z, _minZ, _maxZ);
+        _rigidBody.position = newPosition;
+    }
+    
+    private void OnGameOver()
+    {
+        _isGameOver = true;
+        GlobalGameEvents.GameOver -= OnGameOver;
+    }
+    
+    private void OnCollisionEnter(Collision collision)
+    {
+        if (collision.gameObject.CompareTag("Enemy"))
+        {
+            OnPlayerCollision?.Invoke();
+        }
     }
 }

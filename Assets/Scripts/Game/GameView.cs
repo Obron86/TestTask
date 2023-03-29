@@ -1,13 +1,7 @@
-using UnityEngine;
 using UnityEngine.UI;
 
-public class GameView : MonoBehaviour
+public class GameView
 {
-    [SerializeField] private GameController gameController;
-    [SerializeField] private Text timerText;
-
-    void Update()
-    {
-        
-    }
+    private GameController gameController;
+    private Text timerText;
 }

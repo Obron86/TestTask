@@ -4,58 +4,52 @@ using UnityEngine.EventSystems;
 public class TouchJoystick : MonoBehaviour, IDragHandler
 {
     [SerializeField] private RectTransform handleRectTransform;
-    private Vector3 inputVector;
-    private RectTransform backgroundRectTransform;
-    private Vector3 originalHandlePosition;
+    private Vector3 _inputVector;
+    private RectTransform _backgroundRectTransform;
+    private Vector3 _originalHandlePosition;
 
     private void Start()
     {
-        backgroundRectTransform = GetComponent<RectTransform>();
-        originalHandlePosition = handleRectTransform.localPosition;
+        _backgroundRectTransform = GetComponent<RectTransform>();
+        _originalHandlePosition = handleRectTransform.localPosition;
     }
-
-
+    
     public void OnDrag(PointerEventData eventData)
     {
-        Vector2 position;
         if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                backgroundRectTransform,
+                _backgroundRectTransform,
                 eventData.position,
                 eventData.pressEventCamera,
-                out position))
+                out var position))
         {
-            position.x /= backgroundRectTransform.sizeDelta.x;
-            position.y /= backgroundRectTransform.sizeDelta.y;
+            var sizeDelta = _backgroundRectTransform.sizeDelta;
+            position.x /= sizeDelta.x;
+            position.y /= sizeDelta.y;
 
-            inputVector = new Vector3(position.x * 2, 0, position.y * 2);
+            _inputVector = new Vector3(position.x * 2, 0, position.y * 2);
 
-            if (inputVector.magnitude > 1.0f)
+            if (_inputVector.magnitude > 1.0f)
             {
-                inputVector.Normalize();
+                _inputVector.Normalize();
             }
 
+            var delta = _backgroundRectTransform.sizeDelta;
             handleRectTransform.localPosition = new Vector3(
-                inputVector.x * (backgroundRectTransform.sizeDelta.x * 0.5f),
-                inputVector.z * (backgroundRectTransform.sizeDelta.y * 0.5f),
+                _inputVector.x * (delta.x * 0.5f),
+                _inputVector.z * (delta.y * 0.5f),
                 0);
         }
     }
 
-
-    public void OnPointerDown(PointerEventData eventData)
-    {
-        OnDrag(eventData);
-    }
-
     public void OnPointerUp(PointerEventData eventData)
     {
-        inputVector = Vector3.zero;
-        handleRectTransform.localPosition = originalHandlePosition;
+        _inputVector = Vector3.zero;
+        handleRectTransform.localPosition = _originalHandlePosition;
     }
 
     public Vector3 GetInputDirection()
     {
-        return inputVector.normalized;
+        return _inputVector.normalized;
     }
 
 }
